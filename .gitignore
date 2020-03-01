@@ -130,4 +130,7 @@ dmypy.json
 
 
 # Credentials
-donotpush.txt
+credentials.json
+desktop.ini
+token.pickle
+quickstart.py
