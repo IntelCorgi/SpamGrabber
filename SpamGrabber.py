@@ -54,24 +54,43 @@ def main():
 
     # Gets content from Spam
     try:
-        for ids in spam_list:
-            extract_spam_content = service.users().messages().get(userId = "me", id = ids, format = "metadata", metadataHeaders = ["name","value"]).execute()
+        # Put contents in CSV
+        f = csv.writer(open('GrabbedSpam.csv', "w"))
+        f.writerow(["ID", "Snippet", "Payload"]) 
 
+        for ids in spam_list:
+            extract_spam_content = service.users().messages().get(userId = "me", id = ids, format = "metadata", metadataHeaders = ["From", "Subject", "Received", "Return-Path"]).execute()
+        
             # Pulls required comments out
             spam_snippet = extract_spam_content["snippet"]
-            spam_headers = extract_spam_content["payload.headers[].name"]
-            
+            spam_payload = extract_spam_content["payload"]
+            spam_id_csv = extract_spam_content["id"]
+
+
 
             # Prints spam info for each message
-            print("Spam Id: " + ids + "\r")
-            print("Spam Snippet: " + spam_snippet + "\r")
-            print(spam_headers)
-            print("\n")
+            # print("------------------------------------------------------------------------------------------------------------------------------------------------------------------------" + '\r')
+            # print("Spam Id: " + ids + "\n")
+            # print("Spam Snippet: " + spam_snippet + "\n")
+            # print("Spam Payload (filtered): " + "\n")
+            # print(spam_payload)
+            # print("------------------------------------------------------------------------------------------------------------------------------------------------------------------------" + '\r')
+            # print("\n")
+            # print("\n")
+        for ids in extract_spam_content:
+            f.writerow([spam_id_csv, spam_snippet, spam_payload])
+
+
+        
+            
+
+    
 
     except errors.HttpError as error:
         print("An error occured: %s") % error
     
     
+
     
     
     
@@ -79,8 +98,7 @@ def main():
     
     
     
-    
-    
+    # get mime content
     # try:
     #     spam_list = service.users().messages().get(userId = "me", id = message_ids, format = "raw").execute()
     #     msg_raw = base64.urlsafe_b64decode(message["raw"].encode("ASCII"))
@@ -105,3 +123,7 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+
+
