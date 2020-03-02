@@ -133,5 +133,4 @@ dmypy.json
 credentials.json
 desktop.ini
 token.pickle
-quickstart.py
-SpamGrabber.py
+
