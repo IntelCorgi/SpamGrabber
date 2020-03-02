@@ -55,11 +55,18 @@ def main():
     # Gets content from Spam
     try:
         for ids in spam_list:
-            extract_spam_content = service.users().messages().get(userId = "me", id = ids, format = "full").execute()
+            extract_spam_content = service.users().messages().get(userId = "me", id = ids, format = "metadata").execute()
 
-            content = extract_spam_content["snippet"]
-            print(content)
-        
+            # Pulls required comments out
+            spam_snippet = extract_spam_content["snippet"]
+            spam_headers = extract_spam_content["payload.headers[].name"]
+            
+
+            # Prints spam info for each message
+            print("Spam Id: " + ids + "\r")
+            print("Spam Snippet: " + spam_snippet + "\r")
+            print(spam_headers)
+            print("\n")
 
     except errors.HttpError as error:
         print("An error occured: %s") % error
