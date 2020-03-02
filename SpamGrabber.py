@@ -64,7 +64,7 @@ def main():
             # Pulls required comments out
             spam_snippet = extract_spam_content["snippet"]
             spam_payload = extract_spam_content["payload"]
-            spam_id_csv = extract_spam_content["id"]
+            
 
 
 
