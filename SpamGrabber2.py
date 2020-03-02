@@ -40,7 +40,6 @@ def main():
 
     # List Spam Ids
     try:
-        
         spam_id = service.users().messages().list(userId = "me", q = "in:spam").execute()
         count_results = spam_id["resultSizeEstimate"]
         print(count_results)
@@ -54,6 +53,27 @@ def main():
         print("An error occured: %s") % error
 
     # Gets content from Spam
+    try:
+        for ids in spam_list:
+            extract_spam_content = service.users().messages().get(userId = "me", id = ids, format = "full").execute()
+
+            content = extract_spam_content["snippet"]
+            print(content)
+        
+
+    except errors.HttpError as error:
+        print("An error occured: %s") % error
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     # try:
     #     spam_list = service.users().messages().get(userId = "me", id = message_ids, format = "raw").execute()
     #     msg_raw = base64.urlsafe_b64decode(message["raw"].encode("ASCII"))
