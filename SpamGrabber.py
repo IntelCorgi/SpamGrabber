@@ -3,7 +3,7 @@ import pickle
 import os.path
 import base64
 import email
-import csv
+# import csv
 from apiclient import errors
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -42,7 +42,7 @@ def main():
     try:
         spam_id = service.users().messages().list(userId = "me", q = "in:spam").execute()
         count_results = spam_id["resultSizeEstimate"]
-        print(count_results)
+        print(f"Grabbing {count_results} spam emails.")
         
         spam_list = []
         message_ids = spam_id["messages"]
@@ -54,10 +54,6 @@ def main():
 
     # Gets content from Spam
     try:
-        # Put contents in CSV
-        f = csv.writer(open('GrabbedSpam.csv', "w"))
-        f.writerow(["ID", "Snippet", "Payload"]) 
-
         for ids in spam_list:
             extract_spam_content = service.users().messages().get(userId = "me", id = ids, format = "metadata", metadataHeaders = ["From", "Subject", "Received", "Return-Path"]).execute()
         
@@ -65,26 +61,8 @@ def main():
             spam_snippet = extract_spam_content["snippet"]
             spam_payload = extract_spam_content["payload"]
             
-
-
-
-            # Prints spam info for each message
-            # print("------------------------------------------------------------------------------------------------------------------------------------------------------------------------" + '\r')
-            # print("Spam Id: " + ids + "\n")
-            # print("Spam Snippet: " + spam_snippet + "\n")
-            # print("Spam Payload (filtered): " + "\n")
-            # print(spam_payload)
-            # print("------------------------------------------------------------------------------------------------------------------------------------------------------------------------" + '\r')
-            # print("\n")
-            # print("\n")
-        for ids in extract_spam_content:
-            f.writerow([spam_id_csv, spam_snippet, spam_payload])
-
-
-        
-            
-
-    
+            csv_row = (f"{ids}, {spam_snippet}, {spam_payload}")
+            print( csv_row,"\n")
 
     except errors.HttpError as error:
         print("An error occured: %s") % error
