@@ -11,7 +11,9 @@ Note that this is performing a GET request to Gmail servers, not actually openin
 
 To use this script yourself, make sure you follow [this API quickstart guide](https://developers.google.com/gmail/api/quickstart/python). It will guide you through the process needed to create an authorized instance so you can communicate with your gmail account.
 
-Once your token.pickle file has been created and you have run the necessary packages in place (which should have been installed as a part of the quickstart process) I would recommend creating a csv file to redirect output to, just to make processing easier. Otherwise it will print to the terminal.
+Once your token.pickle file has been created and you have run the necessary packages in place (which should have been installed as a part of the quickstart process) I would recommend creating a txt file to redirect output to, just to make processing easier. Otherwise it will print to the terminal.
+
+Grep for IPs or domains once you have the txt file.
 
 ## Next Steps
 
