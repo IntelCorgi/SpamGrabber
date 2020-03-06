@@ -3,7 +3,6 @@ import pickle
 import os.path
 import base64
 import email
-# import csv
 from apiclient import errors
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -13,9 +12,7 @@ from google.auth.transport.requests import Request
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
  
 def main():
-    """Shows basic usage of the Gmail API.
-    Lists the user's Gmail labels.
-    """
+
     creds = None
     # The file token.pickle stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
@@ -36,7 +33,8 @@ def main():
             pickle.dump(creds, token)
 
     service = build('gmail', 'v1', credentials=creds)
-########################
+
+########### Begin the actual script #############
 
     # List Spam Ids
     try:
@@ -56,47 +54,35 @@ def main():
     try:
         for ids in spam_list:
             extract_spam_content = service.users().messages().get(userId = "me", id = ids, format = "metadata", metadataHeaders = ["From", "Subject", "Received", "Return-Path"]).execute()
-        
-            # Pulls required comments out
+            extract_mime_content = service.users().messages().get(userId = "me", id = ids, format = "raw").execute()
+
+            # Pulls basic message content
             spam_snippet = extract_spam_content["snippet"]
-            spam_payload = extract_spam_content["payload"]
+            spam_payload = extract_spam_content["payload"]["headers"]
+            #spam_metadata = (f"{ids}, {spam_snippet}, {spam_payload}")
+            output_edge = "=========================================================================================================="
             
-            csv_row = (f"{ids}, {spam_snippet}, {spam_payload}")
-            print( csv_row,"\n")
+            # Pulls MIME content
+            msg_str = base64.urlsafe_b64decode(extract_mime_content["raw"].encode("ASCII"))
+            mime_msg = email.message_from_bytes(msg_str)
+            mime_payload = mime_msg.get_payload()
+
+            # Creates output
+            print(output_edge)
+            print("\r")
+            print(f"Metadata for Spam ID: {ids}")
+            print("\n")
+            print(f"SNIPPET: {spam_snippet}")
+            print("\n")
+            print(f"HEADERS: {spam_payload}")
+            print("\n")
+            print(f"MIME PAYLOAD: {mime_payload}")
+            print("\r")
+            
+            #csv_row, mime_payload,"\n")
 
     except errors.HttpError as error:
         print("An error occured: %s") % error
-    
-    
-
-    
-    
-    
-    
-    
-    
-    
-    # get mime content
-    # try:
-    #     spam_list = service.users().messages().get(userId = "me", id = message_ids, format = "raw").execute()
-    #     msg_raw = base64.urlsafe_b64decode(message["raw"].encode("ASCII"))
-    #     msg_str = email.message_from_bytes(msg_raw)
-    #     content_types = msg_str.get_content_maintype()
-
-    #     if content_types == "multipart":
-    #         plaintxt_content = msg_str.get_payload()
-    #         return plaintxt_content.get_payload()
-    #     else:
-    #         return msg_str.get_payload
-
-    # except errors.HttpError as error:
-    #     print("An error occured: %s") % error
-
-
-
-
-
-
 
 
 if __name__ == '__main__':
