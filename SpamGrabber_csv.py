@@ -59,7 +59,7 @@ def main():
             # Pulls basic message content
             spam_snippet = extract_spam_content["snippet"]
             spam_payload = extract_spam_content["payload"]["headers"]
-            spam_metadata = (f"{ids}, {spam_snippet}, {spam_payload}")
+            csv_row = (f"{ids}, {spam_snippet}, {spam_payload}")
             #output_edge = "=========================================================================================================="
             
             # Pulls MIME content
