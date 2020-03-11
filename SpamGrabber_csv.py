@@ -61,13 +61,7 @@ def main():
             spam_payload = extract_spam_content["payload"]["headers"]
             csv_row = (f"{ids}, {spam_snippet}, {spam_payload}")
             #output_edge = "=========================================================================================================="
-            
-            # Pulls MIME content
-            msg_str = base64.urlsafe_b64decode(extract_mime_content["raw"].encode("ASCII"))
-            mime_msg = email.message_from_bytes(msg_str)
-            mime_payload = mime_msg.get_payload()
-            
-            print(csv_row, mime_payload,"\n")
+            print(csv_row, "\n")
 
     except errors.HttpError as error:
         print("An error occured: %s") % error
