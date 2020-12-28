@@ -3,6 +3,8 @@ SpamGrabber
 
 ## Welcome to SpamGrabber!
 
+## Note: Under development
+
 Spamgrabber is a simple python script I have developed to assist me with a project for a class. As the script stands right now, it grabs 30 days worth of spam messages from your Gmail **(and only Gmail)** account and prints data from it in a csv format. By csv format, I mean it is literally printing it as a comma separated format. It is super rough right now, but my main concern is getting my project done so I will return to clean up the code later.
 
 Note that this is performing a GET request to Gmail servers, not actually opening the email or downloading anything.

@@ -1,93 +1,89 @@
-# Libraries to call
+#!/usr/bin/env python
+
+from __future__ import print_function
 import pickle
 import os.path
-import base64
-import email
-from apiclient import errors
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
+from datetime import datetime
+import xlsxwriter
+import base64
+import mailparser
 
-# Necessary Scopes for the script to operate
-SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
- 
-def main():
 
-    creds = None
-    # The file token.pickle stores the user's access and refresh tokens, and is
-    # created automatically when the authorization flow completes for the first
-    # time.
-    if os.path.exists('token.pickle'):
-        with open('token.pickle', 'rb') as token:
-            creds = pickle.load(token)
-    # If there are no (valid) credentials available, let the user log in.
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                'credentials.json', SCOPES)
-            creds = flow.run_local_server(port=0)
-        # Save the credentials for the next run
-        with open('token.pickle', 'wb') as token:
-            pickle.dump(creds, token)
+# We need to use this scope because we aren't sending emails.
+SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 
-    service = build('gmail', 'v1', credentials=creds)
+# Required authentication flow. This will only fire if no creds are detected.
+creds = None
+if os.path.exists('token.pickle'):
+    with open('token.pickle', 'rb') as token:
+        creds = pickle.load(token)
+if not creds or not creds.valid:
+    if creds and creds.expired and creds.refresh_token:
+        creds.refresh(Request())
+    else:
+        flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
+        creds = flow.run_local_server(port=0)
+    with open('token.pickle', 'wb') as token:
+        pickle.dump(creds, token)
+service = build('gmail', 'v1', credentials=creds)
 
-########### Begin the actual script #############
+# Create excel file
+row = 0
+column = 0
+xlsx_creation_timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S") #Idea: user-defined argument
+#xlsx_title = "spam_info_" + xlsx_creation_timestamp
+workbook = xlsxwriter.Workbook(f"spam_analysis_{xlsx_creation_timestamp}.xlsx")
+worksheet = workbook.add_worksheet()
+worksheet.write(column, row, f"contents of spam inbox ({xlsx_creation_timestamp})")
 
-    # List Spam Ids
-    try:
-        spam_id = service.users().messages().list(userId = "me", q = "in:spam").execute()
-        count_results = spam_id["resultSizeEstimate"]
-        print(f"Grabbing {count_results} spam emails.")
-        
-        spam_list = []
-        message_ids = spam_id["messages"]
-        for ids in message_ids:
-            spam_list.append(ids["id"])
+# Set up the spreadsheet
+# Formatting
+#Title_Format = workbook.add_format({"bold": 1, })
+#body_column_width = workbook.add_format({# something to make it size 20})
+
+# set up columns and stuff
+column_titles = ["Message_ID", "Date", "From", "Received", "Subject", "Body"]
+for title in column_titles:
+    worksheet.write(row + 3, column + 1, title)
+    column += 1
+
+
+
+# Get Gmail's ID for each message in the spam inbox
+try:
+    spam_id = service.users().messages().list(userId = "me", q = "in:spam").execute()
+    count_results = spam_id["resultSizeEstimate"]
+    print(f"Grabbing {count_results} spam emails.")
     
-    except errors.HttpError as error:
-        print("An error occured: %s") % error
+    spam_list = []
+    message_ids = spam_id["messages"]
+    for ids in message_ids:
+        spam_list.append(ids["id"])
 
-    # Gets content from Spam
-    try:
-        for ids in spam_list:
-            extract_spam_content = service.users().messages().get(userId = "me", id = ids, format = "metadata", metadataHeaders = ["From", "Subject", "Received", "Return-Path"]).execute()
-            extract_mime_content = service.users().messages().get(userId = "me", id = ids, format = "raw").execute()
+except errors.HttpError as error:
+    print(f"An error occured: {error}")
 
-            # Pulls basic message content
-            spam_snippet = extract_spam_content["snippet"]
-            spam_payload = extract_spam_content["payload"]["headers"]
-            #spam_metadata = (f"{ids}, {spam_snippet}, {spam_payload}")
-            output_edge = "=========================================================================================================="
-            
-            # Pulls MIME content
-            msg_str = base64.urlsafe_b64decode(extract_mime_content["raw"].encode("ASCII"))
-            mime_msg = email.message_from_bytes(msg_str)
-            mime_payload = mime_msg.get_payload()
+try:
+    for ids in spam_list:
+        extract_raw_content = service.users().messages().get(userId = "me", id = ids, format = "raw").execute()
+        spam_contents = mailparser.parse_from_bytes(base64.urlsafe_b64decode(extract_raw_content["raw"]))
+        
+        # Grab all necessary elements
+        body = spam_contents.body
+        headers = spam_contents.headers
 
-            # Creates output
-            print(output_edge)
-            print("\r")
-            print(f"Metadata for Spam ID: {ids}")
-            print("\n")
-            print(f"SNIPPET: {spam_snippet}")
-            print("\n")
-            print(f"HEADERS: {spam_payload}")
-            print("\n")
-            print(f"MIME PAYLOAD: {mime_payload}")
-            print("\r")
-            
-            #csv_row, mime_payload,"\n")
+        # Write data to excel workbook
+        
+        for header, header_data in headers.items():
+            if header in {"Received", "Return-Path", "Date", "From", "Subject"}:
+                #print(f"{header} : {header_data}")
 
-    except errors.HttpError as error:
-        print("An error occured: %s") % error
+except errors.HttpError as error:
+    print(f"An error occured: {error}")
 
-
-if __name__ == '__main__':
-    main()
-
-
+workbook.close()
 
 
